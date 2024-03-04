@@ -3,15 +3,17 @@
 - hosts: all
   become: true
   tasks:
-    - name: update repo cache (CentOS)
+    - name: install updates (CentOS)
       tags: always
       yum:
+        update_only: yes
         update_cache: yes
       when: ansible_distribution == "CentOS"
 
-    - name: update repo cache (Ubuntu)
+    - name: install updates (Ubuntu)
       tags: always
       apt:
+        upgrade: dist
         update_cache: yes
       when: ansible_distribution == "Ubuntu"
 
@@ -19,11 +21,61 @@
   become: true
   tasks:
 
+    - name: create vitaly user
+      tags: always
+      user:
+        name: vitaly
+        groups: root 
+
+  
+    - name: Ensure the SSH directory exists
+      file:
+        path: "home/vitaly/.ssh"
+        state: directory
+        mode: '0700'
+
     - name: Copy SSH Public Key
       ansible.posix.authorized_key:
         user: "vitaly"
         key: "{{ lookup('file', '/Users/vitalyshirgazin/.ssh/id_rsa.pub') }}"
         state: present
+    
+    - name: Add sudoers file for user vitaly
+      copy:
+        content: 'vitaly ALL=(ALL:ALL) NOPASSWD: ALL'
+        dest: '/etc/sudoers.d/vitaly'
+        owner: 'root'
+        group: 'root'
+        mode: '0440'
+        validate: 'visudo -cf %s'
+
+    - name: create Svetlana user
+      tags: always
+      user:
+        name: svetlana
+        groups: root 
+
+  
+    - name: Ensure the SSH directory exists
+      file:
+        path: "home/svetlana/.ssh"
+        state: directory
+        mode: '0700'
+
+    - name: Copy SSH Public Key
+      ansible.posix.authorized_key:
+        user: "svetlana"
+        key: "{{ lookup('file', '/Users/vitalyshirgazin/.ssh/id_rsa.pub') }}"
+        state: present
+    
+    - name: Add sudoers file for user svetlana
+      copy:
+        content: 'svetlana ALL=(ALL:ALL) NOPASSWD: ALL'
+        dest: '/etc/sudoers.d/svetlana'
+        owner: 'root'
+        group: 'root'
+        mode: '0440'
+        validate: 'visudo -cf %s'
 
 - hosts: workstations
   become: true

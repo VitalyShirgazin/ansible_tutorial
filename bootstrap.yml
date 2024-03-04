@@ -1,0 +1,49 @@
+---
+
+- hosts: all
+  become: true
+  tasks:
+    - name: install updates (CentOS)
+      tags: always
+      yum:
+        update_only: yes
+        update_cache: yes
+      when: ansible_distribution == "CentOS"
+
+    - name: install updates (Ubuntu)
+      tags: always
+      apt:
+        upgrade: dist
+        update_cache: yes
+      when: ansible_distribution == "Ubuntu"
+
+- hosts: all
+  become: true
+  tasks:
+
+    - name: create vitaly user
+      tags: always
+      user:
+        name: vitaly
+        groups: root 
+  
+    - name: Ensure the SSH directory exists
+      file:
+        path: "home/vitaly/.ssh"
+        state: directory
+        mode: '0700'
+
+    - name: Copy SSH Public Key
+      ansible.posix.authorized_key:
+        user: "vitaly"
+        key: "{{ lookup('file', '/Users/vitalyshirgazin/.ssh/id_rsa.pub') }}"
+        state: present
+    
+    - name: Add sudoers file for user vitaly
+      copy:
+        content: 'vitaly ALL=(ALL:ALL) NOPASSWD: ALL'
+        dest: '/etc/sudoers.d/vitaly'
+        owner: 'root'
+        group: 'root'
+        mode: '0440'
+        validate: 'visudo -cf %s'
