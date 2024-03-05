@@ -1,0 +1,5 @@
+- name: Copy SSH Public Key
+  ansible.posix.authorized_key:
+        user: "vitaly"
+        key: "{{ lookup('file', '/Users/vitalyshirgazin/.ssh/id_rsa.pub') }}"
+        state: present
